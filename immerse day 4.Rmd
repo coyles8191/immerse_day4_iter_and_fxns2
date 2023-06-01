@@ -1,0 +1,136 @@
+---
+title: "immerse day 4"
+author: "Samantha Coyle-Eastwick"
+date: "2023-05-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r load packages}
+library(tidyverse)
+library(here)
+```
+```{r examine SB county}
+sbc <- read_csv(here('county_data/santa_barbara.csv'))
+
+ggplot(sbc, aes(x= income, y= math)) + geom_point()+ theme_minimal()
+
+```
+```{r summarize sb county}
+sbc_summary <- sbc %>% group_by(grades)%>%
+  summarize(mean_inc= mean(income), mean_read= mean(read), mean_math= mean(math))
+
+write_csv(sbc_summary, here('county_data_summary/santa_barbara.csv'))
+
+```
+
+```{r}
+###for loops lets us do the same thing for a sequence of variables without having to rewrite everything out over and over. 
+vec <- 1:20
+
+for(x in vec) {
+  print(x*2)
+}
+
+month_vec <- month.name
+for (m in month_vec) {
+  x <- paste(m, '2023')
+  print(x)
+}
+
+```
+```{r}
+##easy way to list all of our files using list.files
+file_vec1 <- list.files(here('county_data'))
+file_vec2 <- list.files(here('county_data'), full.names=TRUE)
+file_vec3 <- list.files(here('county_data'), full.names=TRUE, pattern = '.csv')
+
+```
+
+```{r looping}
+f_vec <- list.files(here('county_data'), full.names=TRUE)
+
+for (f in f_vec) {cty_df <- read_csv(f, show_col_types = FALSE)
+cty_summary <- cty_df %>% group_by(grades)%>%
+  summarize(mean_inc= mean(income), mean_read= mean(read), mean_math= mean(math))
+  
+f_out <- here('county_data_summary', basename(f))
+       write_csv(cty_summary, f_out) 
+}
+
+
+```
+
+###functions 
+```{r}
+square <- function(x) {y <- x^2
+return(y)
+}
+square (3); square(sqrt(10))
+
+square2 <- function(x, pow= 2){
+  y<-x^pow
+  return(y)
+
+}
+square2(3, pow=5)
+```
+```{r}
+process_county <- function(f){
+  
+  county_df <- read_csv(f, show_col_types = FALSE)
+county_summary <- county_df %>% 
+  group_by(grades)%>%
+  summarize(mean_inc= mean(income), mean_read= mean(read), mean_math= mean(math))
+  
+f_out <- here('county_data_summary', basename(f))
+      
+  write_csv(county_summary, f_out)
+  
+  return(county_summary) }
+```
+
+```{r}
+process_county <- function(f){
+  
+  county_df <- read_csv(f, show_col_types = FALSE)
+county_summary <- county_df %>% 
+  group_by(grades)%>%
+  summarize(mean_inc= mean(income), mean_read= mean(read), mean_math= mean(math))
+  
+f_out <- here('county_data_summary', basename(f))
+      
+  write_csv(county_summary, f_out)
+  
+  return(county_summary) }
+```
+
+```{r}
+f_vec <- list.files(here('county_data'), full.names = TRUE)
+# system.time({
+for(f in f_vec) {
+  x <- process_county(f = f) 
+  ### note, we don't do anything with x, so it is forgotten each new time 
+  ### through the loop!
+}
+# })
+```
+
+```{r}
+lapply(X= 1:20, FUN= function(x) x^2)
+tmp_list <- lapply(X= f_vec, FUN= process_county)
+
+county_list <- lapply(X= f_vec,
+                      FUN= read_csv,
+                      show_col_types=FALSE)
+
+all_county_df <- bind_rows(county_list)
+
+write_csv(all_county_df, here('data/ca_schools.csv'))
+```
+
+```{r setup, include=FALSE}
